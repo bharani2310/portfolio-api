@@ -1,12 +1,19 @@
 import Profile from '../models/Profile.js';
 import { refreshMiddlewareCache } from '../services/notifyMiddleware.js';
 
+function withAbsoluteImageUrl(req, profileJson) {
+  if (profileJson.profileImage) {
+    profileJson.profileImage = `${req.protocol}://${req.get('host')}${profileJson.profileImage}`;
+  }
+  return profileJson;
+}
+
 export async function getProfile(req, res) {
   const profile = await Profile.findOne().sort({ createdAt: 1 });
   if (!profile) {
     return res.status(404).json({ message: 'Profile not found. Seed the database first.' });
   }
-  res.json(profile);
+  res.json(withAbsoluteImageUrl(req, profile.toJSON()));
 }
 
 export async function getProfileImage(req, res) {
@@ -47,5 +54,5 @@ export async function updateProfile(req, res) {
 
   await profile.save();
   refreshMiddlewareCache();
-  res.json(profile);
+  res.json(withAbsoluteImageUrl(req, profile.toJSON()));
 }

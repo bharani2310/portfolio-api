@@ -1,15 +1,22 @@
 import Project from '../models/Project.js';
 import { refreshMiddlewareCache } from '../services/notifyMiddleware.js';
 
+function withAbsoluteImageUrl(req, projectJson) {
+  if (projectJson.image) {
+    projectJson.image = `${req.protocol}://${req.get('host')}${projectJson.image}`;
+  }
+  return projectJson;
+}
+
 export async function getProjects(req, res) {
   const projects = await Project.find().sort({ order: 1, createdAt: -1 });
-  res.json(projects);
+  res.json(projects.map((p) => withAbsoluteImageUrl(req, p.toJSON())));
 }
 
 export async function getProjectById(req, res) {
   const project = await Project.findById(req.params.id);
   if (!project) return res.status(404).json({ message: 'Project not found' });
-  res.json(project);
+  res.json(withAbsoluteImageUrl(req, project.toJSON()));
 }
 
 export async function getProjectImage(req, res) {
@@ -45,7 +52,7 @@ export async function createProject(req, res) {
 
   await project.save();
   refreshMiddlewareCache();
-  res.status(201).json(project);
+  res.status(201).json(withAbsoluteImageUrl(req, project.toJSON()));
 }
 
 export async function updateProject(req, res) {
@@ -68,7 +75,7 @@ export async function updateProject(req, res) {
 
   await project.save();
   refreshMiddlewareCache();
-  res.json(project);
+  res.json(withAbsoluteImageUrl(req, project.toJSON()));
 }
 
 export async function deleteProject(req, res) {
@@ -85,7 +92,6 @@ function parseTechnologies(technologies) {
       const parsed = JSON.parse(technologies);
       if (Array.isArray(parsed)) return parsed;
     } catch {
-      // fall back to comma-separated string
       return technologies.split(',').map((t) => t.trim()).filter(Boolean);
     }
   }

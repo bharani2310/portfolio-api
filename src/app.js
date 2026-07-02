@@ -11,6 +11,8 @@ import allDataRoutes from './routes/allDataRoutes.js';
 
 const app = express();
 
+app.set('trust proxy', true);
+
 app.use(
   cors({
     origin: process.env.CLIENT_ORIGIN || '*',
