@@ -1,4 +1,5 @@
 import Experience from '../models/Experience.js';
+import { refreshMiddlewareCache } from '../services/notifyMiddleware.js';
 
 export async function getExperience(req, res) {
   const experience = await Experience.find().sort({ order: 1 });
@@ -18,6 +19,7 @@ export async function createExperience(req, res) {
     technologies: parseList(technologies),
     order: order ?? 0,
   });
+  refreshMiddlewareCache();
   res.status(201).json(experience);
 }
 
@@ -30,12 +32,14 @@ export async function updateExperience(req, res) {
   if (technologies !== undefined) experience.technologies = parseList(technologies);
   if (order !== undefined) experience.order = order;
   await experience.save();
+  refreshMiddlewareCache();
   res.json(experience);
 }
 
 export async function deleteExperience(req, res) {
   const experience = await Experience.findByIdAndDelete(req.params.id);
   if (!experience) return res.status(404).json({ message: 'Experience entry not found' });
+  refreshMiddlewareCache();
   res.json({ message: 'Experience entry deleted.' });
 }
 

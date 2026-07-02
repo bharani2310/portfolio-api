@@ -1,4 +1,5 @@
 import Skill from '../models/Skill.js';
+import { refreshMiddlewareCache } from '../services/notifyMiddleware.js';
 
 export async function getSkills(req, res) {
   const skills = await Skill.find().sort({ order: 1 });
@@ -19,6 +20,7 @@ export async function createSkillCategory(req, res) {
     order: order ?? 0,
   });
 
+  refreshMiddlewareCache();
   res.status(201).json(skill);
 }
 
@@ -32,12 +34,14 @@ export async function updateSkillCategory(req, res) {
   if (order !== undefined) skill.order = order;
 
   await skill.save();
+  refreshMiddlewareCache();
   res.json(skill);
 }
 
 export async function deleteSkillCategory(req, res) {
   const skill = await Skill.findByIdAndDelete(req.params.id);
   if (!skill) return res.status(404).json({ message: 'Skill category not found' });
+  refreshMiddlewareCache();
   res.json({ message: 'Skill category deleted.' });
 }
 

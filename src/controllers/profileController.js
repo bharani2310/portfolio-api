@@ -1,4 +1,5 @@
 import Profile from '../models/Profile.js';
+import { refreshMiddlewareCache } from '../services/notifyMiddleware.js';
 
 export async function getProfile(req, res) {
   const profile = await Profile.findOne().sort({ createdAt: 1 });
@@ -45,5 +46,6 @@ export async function updateProfile(req, res) {
   }
 
   await profile.save();
+  refreshMiddlewareCache();
   res.json(profile);
 }

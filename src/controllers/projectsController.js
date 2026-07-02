@@ -1,4 +1,5 @@
 import Project from '../models/Project.js';
+import { refreshMiddlewareCache } from '../services/notifyMiddleware.js';
 
 export async function getProjects(req, res) {
   const projects = await Project.find().sort({ order: 1, createdAt: -1 });
@@ -43,6 +44,7 @@ export async function createProject(req, res) {
   }
 
   await project.save();
+  refreshMiddlewareCache();
   res.status(201).json(project);
 }
 
@@ -65,12 +67,14 @@ export async function updateProject(req, res) {
   }
 
   await project.save();
+  refreshMiddlewareCache();
   res.json(project);
 }
 
 export async function deleteProject(req, res) {
   const project = await Project.findByIdAndDelete(req.params.id);
   if (!project) return res.status(404).json({ message: 'Project not found' });
+  refreshMiddlewareCache();
   res.json({ message: 'Project deleted.' });
 }
 
