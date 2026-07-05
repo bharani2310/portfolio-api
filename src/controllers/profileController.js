@@ -3,7 +3,8 @@ import { refreshMiddlewareCache } from '../services/notifyMiddleware.js';
 
 function withAbsoluteImageUrl(req, profileJson) {
   if (profileJson.profileImage) {
-    profileJson.profileImage = `${req.protocol}://${req.get('host')}${profileJson.profileImage}`;
+    const version = profileJson.updatedAt ? `?v=${new Date(profileJson.updatedAt).getTime()}` : '';
+    profileJson.profileImage = `${req.protocol}://${req.get('host')}${profileJson.profileImage}${version}`;
   }
   return profileJson;
 }
