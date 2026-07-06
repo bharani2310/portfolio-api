@@ -12,8 +12,8 @@ async function toDataUri(buffer, contentType) {
   if (!buffer) return null;
   try {
     const compressed = await sharp(buffer)
-      .resize({ width: 400, withoutEnlargement: true })
-      .webp({ quality: 55 })
+      .resize({ width: 7200, withoutEnlargement: true }) //400
+      .webp({ quality: 75 }) //55
       .toBuffer();
     return `data:image/webp;base64,${compressed.toString('base64')}`;
   } catch {
