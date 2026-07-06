@@ -57,8 +57,13 @@ export async function getAllData(req, res) {
     })
   );
 
-  // Strip binary fields from profile; add the compressed data-URI
-  const { profileImageData, __v, ...profileRest } = profile || {};
+  // Strip binary fields from profile; add the compressed data-URI.
+  // resumeFileData is stripped the same way profileImageData is — it's
+  // never meant to leave the database as raw bytes. Unlike profileImage,
+  // we don't need a data-URI here: the public site fetches the actual
+  // PDF from the middleware's own /api/resume route (see Hero.jsx), so
+  // this only needs to be a truthy "yes, a resume exists" signal.
+  const { profileImageData, resumeFileData, __v, ...profileRest } = profile || {};
 
   // Flatten socialLinks Map if it serialised oddly from .lean()
   let socialLinks = profileRest.socialLinks;
@@ -70,6 +75,7 @@ export async function getAllData(req, res) {
     profile: {
       ...profileRest,
       profileImage: profileImageDataUri,
+      resumeFile: Boolean(resumeFileData?.contentType),
       socialLinks: socialLinks || {},
     },
     experience: experience || [],
