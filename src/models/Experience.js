@@ -13,12 +13,27 @@ const roleSchema = new mongoose.Schema(
 const experienceSchema = new mongoose.Schema(
   {
     companyName: { type: String, required: true },
+    // Company logo, stored as binary directly in MongoDB — same pattern
+    // as Project.imageData / Profile.profileImageData.
+    imageData: {
+      data: Buffer,
+      contentType: String,
+    },
     roles: { type: [roleSchema], default: [] },
     technologies: { type: [String], default: [] },
     order: { type: Number, default: 0 },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform: (_doc, ret) => {
+        ret.image = ret.imageData?.contentType ? `/api/experience/${ret._id}/image` : null;
+        delete ret.imageData;
+        return ret;
+      },
+    },
+  }
 );
 
 export default mongoose.model('Experience', experienceSchema);
-

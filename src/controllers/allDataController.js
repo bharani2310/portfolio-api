@@ -57,6 +57,26 @@ export async function getAllData(req, res) {
     })
   );
 
+  // Compress experience company logos the same way — small, since these
+  // render at logo size (see Experience.jsx), not full card-width.
+  const experienceWithImages = await Promise.all(
+    (experience || []).map(async (item) => {
+      let imageDataUri = null;
+      if (item.imageData?.data) {
+        try {
+          const buf = item.imageData.data.buffer ?? item.imageData.data;
+          const compressed = await sharp(buf)
+            .resize({ width: 160, height: 160, fit: 'cover', withoutEnlargement: true })
+            .webp({ quality: 60 })
+            .toBuffer();
+          imageDataUri = `data:image/webp;base64,${compressed.toString('base64')}`;
+        } catch { /* skip */ }
+      }
+      const { imageData, __v, ...rest } = item;
+      return { ...rest, image: imageDataUri };
+    })
+  );
+
   // Strip binary fields from profile; add the compressed data-URI.
   // resumeFileData is stripped the same way profileImageData is — it's
   // never meant to leave the database as raw bytes. Unlike profileImage,
@@ -78,7 +98,7 @@ export async function getAllData(req, res) {
       resumeFile: Boolean(resumeFileData?.contentType),
       socialLinks: socialLinks || {},
     },
-    experience: experience || [],
+    experience: experienceWithImages,
     skills: skills || [],
     projects: projectsWithImages,
     generatedAt: new Date().toISOString(),

@@ -1,9 +1,24 @@
 import Experience from '../models/Experience.js';
 import { refreshMiddlewareCache } from '../services/notifyMiddleware.js';
 
+function withAbsoluteImageUrl(req, experienceJson) {
+  if (experienceJson.image) {
+    experienceJson.image = `${req.protocol}://${req.get('host')}${experienceJson.image}`;
+  }
+  return experienceJson;
+}
+
 export async function getExperience(req, res) {
   const experience = await Experience.find().sort({ order: 1 });
-  res.json(experience);
+  res.json(experience.map((e) => withAbsoluteImageUrl(req, e.toJSON())));
+}
+
+export async function getExperienceImage(req, res) {
+  const experience = await Experience.findById(req.params.id);
+  if (!experience?.imageData?.data) return res.status(404).end();
+  res.set('Content-Type', experience.imageData.contentType);
+  res.set('Cache-Control', 'public, max-age=3600');
+  res.send(experience.imageData.data);
 }
 
 // --- Admin-only ---
@@ -13,14 +28,20 @@ export async function createExperience(req, res) {
   if (!companyName?.trim()) {
     return res.status(400).json({ message: 'Company name is required.' });
   }
-  const experience = await Experience.create({
+  const experience = new Experience({
     companyName,
     roles: parseRoles(roles),
     technologies: parseList(technologies),
     order: order ?? 0,
   });
+
+  if (req.file) {
+    experience.imageData = { data: req.file.buffer, contentType: req.file.mimetype };
+  }
+
+  await experience.save();
   refreshMiddlewareCache();
-  res.status(201).json(experience);
+  res.status(201).json(withAbsoluteImageUrl(req, experience.toJSON()));
 }
 
 export async function updateExperience(req, res) {
@@ -31,9 +52,14 @@ export async function updateExperience(req, res) {
   if (roles !== undefined) experience.roles = parseRoles(roles);
   if (technologies !== undefined) experience.technologies = parseList(technologies);
   if (order !== undefined) experience.order = order;
+
+  if (req.file) {
+    experience.imageData = { data: req.file.buffer, contentType: req.file.mimetype };
+  }
+
   await experience.save();
   refreshMiddlewareCache();
-  res.json(experience);
+  res.json(withAbsoluteImageUrl(req, experience.toJSON()));
 }
 
 export async function deleteExperience(req, res) {
