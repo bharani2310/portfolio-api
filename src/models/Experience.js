@@ -13,6 +13,10 @@ const roleSchema = new mongoose.Schema(
 const experienceSchema = new mongoose.Schema(
   {
     companyName: { type: String, required: true },
+    // e.g. "Hybrid" | "Onsite" | "Remote"
+    workplaceType: { type: String, enum: ['Hybrid', 'Onsite', 'Remote'], default: null },
+    // Free-typed location, e.g. "Chennai, Tamil Nadu"
+    location: { type: String, default: '' },
     // Company logo, stored as binary directly in MongoDB — same pattern
     // as Project.imageData / Profile.profileImageData.
     imageData: {

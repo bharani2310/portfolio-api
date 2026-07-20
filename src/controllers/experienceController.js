@@ -24,12 +24,14 @@ export async function getExperienceImage(req, res) {
 // --- Admin-only ---
 
 export async function createExperience(req, res) {
-  const { companyName, roles, technologies, order } = req.body;
+  const { companyName, workplaceType, location, roles, technologies, order } = req.body;
   if (!companyName?.trim()) {
     return res.status(400).json({ message: 'Company name is required.' });
   }
   const experience = new Experience({
     companyName,
+    workplaceType: workplaceType || null,
+    location: location || '',
     roles: parseRoles(roles),
     technologies: parseList(technologies),
     order: order ?? 0,
@@ -47,8 +49,10 @@ export async function createExperience(req, res) {
 export async function updateExperience(req, res) {
   const experience = await Experience.findById(req.params.id);
   if (!experience) return res.status(404).json({ message: 'Experience entry not found' });
-  const { companyName, roles, technologies, order } = req.body;
+  const { companyName, workplaceType, location, roles, technologies, order } = req.body;
   if (companyName !== undefined) experience.companyName = companyName;
+  if (workplaceType !== undefined) experience.workplaceType = workplaceType || null;
+  if (location !== undefined) experience.location = location;
   if (roles !== undefined) experience.roles = parseRoles(roles);
   if (technologies !== undefined) experience.technologies = parseList(technologies);
   if (order !== undefined) experience.order = order;
